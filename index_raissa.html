@@ -1,0 +1,912 @@
+<html class="scroll-smooth" lang="en">
+ <head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1" name="viewport"/>
+  <title>
+   Magical Congratulations App
+  </title>
+  <script src="https://cdn.tailwindcss.com">
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=MedievalSharp&amp;display=swap" rel="stylesheet"/>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" rel="stylesheet"/>
+  <style>
+    .hidden {
+      display: none !important;
+    }
+    html, body {
+      height: 100vh;
+      overflow: hidden !important;
+      position: relative;
+    }
+
+    #pre-welcome-screen {
+      z-index: 25;
+      background: linear-gradient(180deg, #1a1a2e 0%, #0b0a0f 100%);
+      opacity: 1;
+      transition: opacity 1s ease;
+    }
+    #pre-welcome-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #welcome-screen,
+    #congrats-screen {
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      z-index: 20;
+      background: transparent;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    #congrats-screen {
+      z-index: 30;
+    }
+   /* Hogwarts style font fallback */
+    body {
+      font-family: 'MedievalSharp', cursive, serif;
+      background-color: #0b0a0f;
+      color: #f3e9d2;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Welcome screen background: dark mysterious castle colors with sparkling stars */
+    #shadow-bg {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+      background:
+        radial-gradient(ellipse at center, rgba(30, 30, 40, 0.7) 0%, transparent 70%),
+        linear-gradient(180deg, #1a1a2e 0%, #0b0a0f 100%);
+      filter: drop-shadow(0 0 15px rgba(50, 50, 70, 0.7));
+      animation: shadowMove 25s linear infinite alternate;
+    }
+
+    /* Sparkling stars container */
+    #stars {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 5;
+      overflow: visible;
+    }
+
+    /* Individual star */
+    .star {
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+      opacity: 0.8;
+      filter: drop-shadow(0 0 4px #fff);
+      animation: twinkle 3s infinite ease-in-out;
+      will-change: opacity, transform;
+    }
+
+    /* Twinkle animation */
+    @keyframes twinkle {
+      0%, 100% {
+        opacity: 0.8;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.2;
+        transform: scale(0.8);
+      }
+    }
+
+    @keyframes shadowMove {
+      0% {
+        transform: translate(0, 0) scale(1);
+        filter: drop-shadow(0 0 15px rgba(50, 50, 70, 0.7));
+      }
+      50% {
+        transform: translate(25px, 20px) scale(1.07);
+        filter: drop-shadow(0 0 30px rgba(70, 70, 90, 0.8));
+      }
+      100% {
+        transform: translate(0, 0) scale(1);
+        filter: drop-shadow(0 0 15px rgba(50, 50, 70, 0.7));
+      }
+    }
+
+    /* Sparks container */
+    #sparks {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 20;
+      overflow: visible;
+    }
+
+    /* Fireworks container */
+    #fireworks {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 15;
+      overflow: visible;
+    }
+
+    /* Firework particle */
+    .firework-particle {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0;
+      animation-fill-mode: forwards;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 0 4px);
+    }
+
+    /* Sparks particle */
+    .spark-particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      opacity: 0;
+      animation-fill-mode: forwards;
+      will-change: transform, opacity;
+      filter: drop-shadow(0 0 3px);
+    }
+
+    /* Firework explosion animation */
+    @keyframes firework-explode {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0.1);
+      }
+    }
+
+    /* Spark flying animation */
+    @keyframes spark-fly {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0.3);
+      }
+    }
+
+    /* Shake animation for "You are not invited" */
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-10px); }
+      40%, 80% { transform: translateX(10px); }
+    }
+
+    /* Congratulations screen fade-in and scale animation */
+    #congrats-screen {
+      opacity: 0;
+      transform: scale(0.8);
+      transition: opacity 1.5s ease, transform 1.5s ease;
+      z-index: 30;
+      position: relative;
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0.5rem;
+      padding: 1rem;
+      max-width: 28rem;
+      margin: 0 auto;
+      min-height: 100vh;
+    }
+    #congrats-screen.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* Logo spanning middle top and middle bottom rows */
+    #logo-container {
+      grid-column: 2 / span 2;
+      grid-row: 2 / span 2;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #logo-container img {
+      max-height: 100%;
+      max-width: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 0 8px #f9d71c);
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+      #congrats-screen {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem 1rem;
+        min-height: auto;
+        max-width: 100%;
+        gap: 1.5rem;
+      }
+      #logo-container {
+        grid-column: auto;
+        grid-row: auto;
+        width: 80vw;
+        max-width: 280px;
+        margin: 0 auto;
+      }
+      #logo-container img {
+        max-height: 180px;
+        width: auto;
+      }
+      #congrats-screen > div.flex.flex-col.items-center.justify-center {
+        margin-top: 0;
+      }
+      #congrats-screen > div.col-span-4.flex.flex-col.items-center.justify-center.space-y-2.-mt-2 {
+        margin-top: 0;
+        padding: 0 1rem;
+      }
+      #congrats-screen h2.congrats-text {
+        font-size: 2.5rem;
+        margin-top: 0;
+      }
+      #congrats-screen h3 {
+        font-size: 1.75rem;
+      }
+      .welcome-text-line1, .welcome-text-line2 {
+        margin-top: 0 !important;
+      }
+    }
+
+    @media (max-width: 400px) {
+      #congrats-screen h2.congrats-text {
+        font-size: 2rem;
+      }
+      #congrats-screen h3 {
+        font-size: 1.5rem;
+      }
+    }
+
+    /* College invitation folder letter container */
+    #sealed-letter {
+      margin-top: 1.5rem;
+      width: 160px;
+      height: 200px;
+      position: relative;
+      cursor: default;
+      user-select: none;
+      perspective: 1000px;
+      filter: drop-shadow(0 0 8px #f9d71c);
+      z-index: 25;
+      transition: transform 1.6s ease, opacity 1.6s ease;
+      transform-origin: center center;
+    }
+
+    /* Folder base */
+    #folder-base {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #d9cba3 0%, #bfae7a 100%);
+      border-radius: 0.75rem;
+      box-shadow:
+        inset 0 4px 8px rgba(255, 255, 255, 0.3),
+        0 6px 12px rgba(0, 0, 0, 0.6);
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    /* Folder flap */
+    #folder-flap {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(135deg, #cbb87a 0%, #a88f4a 100%);
+      border-radius: 0.75rem 0.75rem 0 0;
+      box-shadow:
+        inset 0 3px 6px rgba(255, 255, 255, 0.25),
+        0 3px 6px rgba(0, 0, 0, 0.5);
+      transform-origin: top center;
+      transition: transform 1.2s ease;
+      z-index: 3;
+      pointer-events: none;
+    }
+
+    /* Invitation paper inside folder */
+    #invitation-paper {
+      position: absolute;
+      top: 40px;
+      left: 12px;
+      width: calc(100% - 24px);
+      height: calc(100% - 60px);
+      background: #f9f5e7;
+      border-radius: 0.5rem;
+      box-shadow:
+        0 0 10px rgba(255, 255, 255, 0.6),
+        inset 0 0 8px rgba(0, 0, 0, 0.1);
+      z-index: 2;
+      opacity: 0;
+      transition: opacity 1.2s ease 0.3s;
+      user-select: none;
+    }
+
+    /* Wax seal */
+    #wax-seal {
+      position: absolute;
+      top: 70px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 70px;
+      height: 70px;
+      pointer-events: none;
+      filter: drop-shadow(0 0 10px #b22222);
+      transition: transform 1.2s ease, opacity 1.2s ease;
+      transform-origin: center center;
+      z-index: 4;
+    }
+
+    /* Unsealing animation */
+    #sealed-letter.unsealing #folder-flap {
+      animation: flapOpen 1.2s forwards;
+      animation-delay: 0.3s;
+    }
+    #sealed-letter.unsealing #wax-seal {
+      animation: waxUnseal 1.2s forwards;
+    }
+    #sealed-letter.unsealing #invitation-paper {
+      opacity: 1;
+    }
+
+    /* Zoom into letter animation */
+    #welcome-screen.zooming {
+      animation: zoomIntoLetter 1.6s forwards;
+      transform-origin: center center;
+      z-index: 40;
+      position: relative;
+    }
+    #sealed-letter.zooming {
+      animation: letterZoomIn 1.6s forwards;
+      transform-origin: center center;
+      z-index: 45;
+      position: relative;
+    }
+
+    @keyframes flapOpen {
+      0% {
+        transform: rotateX(0deg);
+      }
+      100% {
+        transform: rotateX(-120deg);
+      }
+    }
+
+    @keyframes waxUnseal {
+      0% {
+        transform: translateX(-50%) rotate(0deg) scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: translateX(-50%) rotate(-45deg) scale(1.1);
+        opacity: 1;
+      }
+      100% {
+        transform: translateX(-50%) rotate(-90deg) scale(0);
+        opacity: 0;
+      }
+    }
+
+    @keyframes zoomIntoLetter {
+      0% {
+        opacity: 1;
+        transform: scale(1) translate(0, 0);
+        filter: none;
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(3) translate(0, 0);
+        filter: brightness(0.5);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(10) translate(0, 0);
+        filter: brightness(0);
+      }
+    }
+
+    @keyframes letterZoomIn {
+      0% {
+        opacity: 1;
+        transform: scale(1) translate(0, 0);
+        filter: drop-shadow(0 0 8px #f9d71c);
+      }
+      50% {
+        opacity: 0.7;
+        transform: scale(4) translate(0, 0);
+        filter: drop-shadow(0 0 20px #f9d71c);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(12) translate(0, 0);
+        filter: drop-shadow(0 0 0 #f9d71c);
+      }
+    }
+
+    /* Sound button styles */
+    .sound-button {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 100;
+      background: rgba(0,0,0,0.5);
+      border-radius: 9999px;
+      width: 3rem;
+      height: 3rem;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      user-select: none;
+    }
+    .sound-button:hover {
+      background: rgba(0,0,0,0.8);
+    }
+    .sound-button svg {
+      color: #f9d71c;
+      width: 1.5rem;
+      height: 1.5rem;
+      transition: transform 0.3s ease;
+    }
+    .sound-button.muted svg {
+      color: #555;
+      transform: rotate(-20deg);
+    }
+  </style>
+ </head>
+ <body class="relative overflow-hidden min-h-screen flex flex-col items-center justify-center px-4">
+  <div id="shadow-bg"></div>
+  <div id="stars" aria-hidden="true"></div>
+
+  <!-- Sound button for welcome screen -->
+  <button id="sound-btn-welcome" aria-label="Toggle sound" class="sound-button hidden" title="Toggle sound">    <svg id="sound-icon-welcome" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+      <path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5v-9A4.5 4.5 0 0 1 16.5 12z"/>
+      <path d="M19.5 12a7.5 7.5 0 0 1-7.5 7.5v-3a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0-4.5-4.5v-3a7.5 7.5 0 0 1 7.5 7.5z"/>
+    </svg>
+  </button>
+
+  <!-- Sound button for congrats screen -->
+  <button id="sound-btn-congrats" aria-label="Toggle sound" class="sound-button hidden" title="Toggle sound">
+    <svg id="sound-icon-congrats" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+      <path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5v-9A4.5 4.5 0 0 1 16.5 12z"/>
+      <path d="M19.5 12a7.5 7.5 0 0 1-7.5 7.5v-3a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0-4.5-4.5v-3a7.5 7.5 0 0 1 7.5 7.5z"/>
+    </svg>
+  </button>
+
+  <!-- Pre-Welcome Screen -->
+  <section class="z-25 w-full flex flex-col items-center justify-center min-h-screen" id="pre-welcome-screen">
+    <h1 class="text-4xl sm:text-5xl font-bold mb-8 text-center select-none" style="text-shadow: 0 0 8px #f9d71c, 0 0 15px #f9d71c;">
+      Oh? What's this?
+    </h1>
+    <button aria-label="Tap to reveal" class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-md shadow-lg transition duration-300 ease-in-out select-none" id="reveal-btn">
+      Tap to Reveal
+    </button>
+  </section>
+
+  <!-- Welcome Screen -->
+  <section class="z-20 w-full flex flex-col items-center justify-center min-h-screen hidden" id="welcome-screen">   <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold mb-8 text-center select-none" style="text-shadow: 0 0 12px #f9d71c, 0 0 15px #f9d71c;">
+    <span>A Missive from</span><br/>
+    <span>the Circle of Magisters</span>
+   </h1>
+   <form class="w-full flex flex-col items-center gap-6" id="name-form" novalidate="">
+    <label class="text-xl sm:text-2xl mb-2 select-none" for="name-input" style="text-shadow: 0 0 6px #f9d71c;">
+     Enter your name to open the letter:
+    </label>
+    <input aria-label="Enter your name" autocomplete="off" class="w-full max-w-xs px-4 py-3 rounded-md text-black text-lg font-semibold focus:outline-none focus:ring-4 focus:ring-yellow-400" id="name-input" name="name" placeholder="Your name here" required="" type="text"/>
+    <button aria-label="Submit name" class="bg-yellow-400 hover:bg-yellow-500 text-black font-bold py-3 px-8 rounded-md shadow-lg transition duration-300 ease-in-out select-none" id="open-letter-btn" type="submit">
+     Open Letter
+    </button>
+   </form>
+   <div aria-hidden="true" aria-label="Magical college invitation folder letter with a red wax seal" aria-roledescription="animated college invitation folder letter" id="sealed-letter" role="img">
+    <div id="folder-base"></div>
+    <div id="folder-flap"></div>
+    <div aria-hidden="true" id="invitation-paper"></div>
+    <img alt="Red wax seal with intricate magical symbols" height="70" id="wax-seal" src="https://storage.googleapis.com/a1aa/image/c47a10e0-f66c-4848-b0a0-c084ce6ed097.jpg" width="70"/>
+   </div>
+   <p aria-live="assertive" class="mt-6 text-red-500 font-semibold text-lg select-none opacity-0" id="error-msg" role="alert" style="text-shadow: 0 0 6px #ff0000;">
+    You are not invited
+   </p>
+  </section>
+  <!-- Congratulations Screen -->
+  <section aria-live="polite" class="relative z-30 w-full max-w-md mx-auto min-h-screen grid grid-rows-4 grid-cols-4 gap-2 p-4 hidden" id="congrats-screen" style="grid-template-rows: 1fr 1fr 1fr 1fr; grid-template-columns: 1fr 1fr 1fr 1fr;">
+   <!-- 16 boxes grid -->
+   <!-- Very Top Row -->
+   <div class="col-span-1 row-span-1 flex items-center justify-center"></div>
+   <div class="flex flex-col items-center justify-center">
+    <h2 class="congrats-text text-5xl sm:text-5xl font-extrabold text-yellow-400 text-center select-none" style="margin-top:4rem; text-shadow: 0 0 10px #f9d71c, 0 0 20px #f9d71c;">
+     Congratulations <span id="congrats-name" class="text-white"></span>,<!-- Name will be inserted here -->
+     <br/>
+    </h2>
+    <h3 class="text-xl sm:text-2xl font-extrabold text-yellow-400 text-center select-none" style="margin-top:1rem; text-shadow: 0 0 10px #f9d71c, 0 0 20px #f9d71c;">
+     you've been sorted into...
+    </h3>
+   </div>
+   <div class="col-span-1 row-span-1 flex items-center justify-center"></div>
+   <!-- Middle Top + Middle Bottom Rows merged for logo -->
+   <div aria-hidden="true" id="logo-container" class="col-span-4 row-span-2 flex items-center justify-center">
+    <img alt="University logo, a medieval crest with a golden lion and a book on a dark blue shield, surrounded by ornate golden filigree" height="300" id="university-logo" src="assets/logo1.png" width="300"/>
+   </div>
+   <!-- Very Bottom Row -->
+   <div class="col-span-4 flex flex-col items-center justify-center space-y-2 -mt-2">
+    <p class="welcome-text-line1 text-2xl sm:text-3xl font-semibold text-yellow-300 text-center select-none" style="margin-top:-6rem; text-shadow: 0 0 6px #f9d71c;">
+     Welcome to the <!-- Welcome text-->
+    </p>
+    <p class="welcome-text-line2 text-3xl sm:text-4xl md:text-5xl font-semibold text-white-300 text-center select-none" style="text-shadow: 0 0 12px #fffdf3;">
+     enchanted halls of knowledge. <!-- Welcome text line 2 -->
+    <p class="wishes-text text-xl sm:text-2xl italic text-yellow-300 text-center select-none" style="text-shadow: 0 0 8px #f9d71c;">
+     May your journey be filled with magic and wonder.  <!-- wishes text -->
+    </p>
+   </div>
+  </section>
+  <!-- Sparks container -->
+  <div aria-hidden="true" id="sparks"></div>
+  <!-- Fireworks container -->
+  <div aria-hidden="true" id="fireworks"></div>
+
+  <!-- Audio elements -->
+  <audio id="welcome-audio" src="assets/welcome_audio.mp3" loop preload="auto"></audio>
+  <audio id="congrats-audio" src="assets/congrats_audio.mp3" loop preload="auto"></audio>
+
+  <script>
+   (() => {
+      const allowedNames = ['raissa'];
+      const welcomeScreen = document.getElementById('welcome-screen');
+      const congratsScreen = document.getElementById('congrats-screen');
+      const preWelcomeScreen = document.getElementById('pre-welcome-screen');
+      const revealBtn = document.getElementById('reveal-btn');
+      const nameForm = document.getElementById('name-form');
+      const nameInput = document.getElementById('name-input');
+      const errorMsg = document.getElementById('error-msg');
+      const sparksContainer = document.getElementById('sparks');
+      const fireworksContainer = document.getElementById('fireworks');
+      const universityLogo = document.getElementById('university-logo');
+      const sealedLetter = document.getElementById('sealed-letter');
+      const openLetterBtn = document.getElementById('open-letter-btn');
+      const welcomeAudio = document.getElementById('welcome-audio');
+      const congratsAudio = document.getElementById('congrats-audio');
+      const soundBtnWelcome = document.getElementById('sound-btn-welcome');
+      const soundBtnCongrats = document.getElementById('sound-btn-congrats');
+      const soundIconWelcome = document.getElementById('sound-icon-welcome');
+      const soundIconCongrats = document.getElementById('sound-icon-congrats');
+
+      // Colors for fireworks and sparks separated
+      const fireworkColors = [
+        { name: 'red', hsl: '0, 85%, 60%', dropShadow: '0 0 6px #ff4d4d' },
+        { name: 'white', hsl: '0, 0%, 90%', dropShadow: '0 0 8px #ffffff' },
+      ];
+      const sparkColors = [
+        { name: 'red', hsl: '0, 85%, 60%', dropShadow: '0 0 4px #ff4d4d' },
+        { name: 'white', hsl: '0, 0%, 90%', dropShadow: '0 0 5px #ffffff' },
+      ];
+
+      // Utility: random number between min and max
+      function randomBetween(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      // Show error message with shake animation
+      function showError() {
+        errorMsg.style.opacity = '1';
+        errorMsg.style.animation = 'shake 0.5s';
+        setTimeout(() => {
+          errorMsg.style.animation = '';
+          errorMsg.style.opacity = '0';
+        }, 1500);
+      }
+
+      // Create sparks flying animation for a given color
+      function createSpark(color) {
+        const spark = document.createElement('div');
+        spark.classList.add('spark-particle');
+        // Random start position inside screen
+        spark.style.left = `${randomBetween(0, window.innerWidth)}px`;
+        spark.style.top = `${randomBetween(0, window.innerHeight)}px`;
+        // Random fly direction and distance
+        const tx = randomBetween(-100, 100);
+        const ty = randomBetween(-100, 100);
+        spark.style.setProperty('--tx', `${tx}px`);
+        spark.style.setProperty('--ty', `${ty}px`);
+        spark.style.backgroundColor = `hsl(${color.hsl})`;
+        spark.style.filter = `drop-shadow(${color.dropShadow})`;
+        spark.style.animation = `spark-fly 1.5s ease-out forwards`;
+        sparksContainer.appendChild(spark);
+        setTimeout(() => {
+          spark.remove();
+        }, 1500);
+      }
+
+      // Create fireworks explosion at random position and size for a given color
+      function createFirework(color) {
+        const sizeOptions = {
+          small: 6,
+          medium: 10,
+          large: 14,
+        };
+        const sizes = Object.keys(sizeOptions);
+        const size = sizes[Math.floor(Math.random() * sizes.length)];
+        const particleCount = size === 'small' ? 12 : size === 'medium' ? 18 : 24;
+        const baseSize = sizeOptions[size];
+
+        const centerX = randomBetween(0.1 * window.innerWidth, 0.9 * window.innerWidth);
+        const centerY = randomBetween(0.1 * window.innerHeight, 0.9 * window.innerHeight);
+
+        for (let i = 0; i < particleCount; i++) {
+          const particle = document.createElement('div');
+          particle.classList.add('firework-particle');
+          particle.style.width = `${baseSize}px`;
+          particle.style.height = `${baseSize}px`;
+          particle.style.backgroundColor = `hsl(${color.hsl})`;
+          particle.style.filter = `drop-shadow(${color.dropShadow})`;
+          particle.style.left = `${centerX}px`;
+          particle.style.top = `${centerY}px`;
+          // Calculate explosion direction
+          const angle = (360 / particleCount) * i;
+          const distance = randomBetween(50, 120);
+          const tx = (distance * Math.cos((angle * Math.PI) / 180)).toFixed(2);
+          const ty = (distance * Math.sin((angle * Math.PI) / 180)).toFixed(2);
+          particle.style.setProperty('--tx', `${tx}px`);
+          particle.style.setProperty('--ty', `${ty}px`);
+          particle.style.animation = `firework-explode 1.4s ease-out forwards`;
+          fireworksContainer.appendChild(particle);
+          setTimeout(() => {
+            particle.remove();
+          }, 1400);
+        }
+      }
+
+      // Sparks loop for each color separately
+      let sparksIntervals = [];
+      function startSparks() {
+        stopSparks();
+        sparkColors.forEach(color => {
+          const interval = setInterval(() => {
+            createSpark(color);
+          }, 120);
+          sparksIntervals.push(interval);
+        });
+      }
+      function stopSparks() {
+        sparksIntervals.forEach(i => clearInterval(i));
+        sparksIntervals = [];
+      }
+
+      // Fireworks loop for each color separately with increased frequency
+      let fireworksIntervals = [];
+      function startFireworks() {
+        stopFireworks();
+        fireworkColors.forEach(color => {
+          const interval = setInterval(() => {
+            createFirework(color);
+          }, 400);
+          fireworksIntervals.push(interval);
+        });
+      }
+      function stopFireworks() {
+        fireworksIntervals.forEach(i => clearInterval(i));
+        fireworksIntervals = [];
+      }
+
+      // Animate unsealing letter
+      function animateUnseal() {
+        return new Promise((resolve) => {
+          sealedLetter.classList.add('unsealing');
+          // Wait for animation duration (1.2s flap + 1.2s wax with 0.3s delay)
+          setTimeout(() => {
+            resolve();
+          }, 1600);
+        });
+      }
+
+      // Reset sealed letter to initial state
+      function resetSealedLetter() {
+        sealedLetter.classList.remove('unsealing');
+      }
+
+      // Create stars for background
+      function createStar() {
+        const star = document.createElement('div');
+        star.classList.add('star');
+        const size = randomBetween(1, 3);
+        star.style.width = `${size}px`;
+        star.style.height = `${size}px`;
+        star.style.left = `${randomBetween(0, window.innerWidth)}px`;
+        star.style.top = `${randomBetween(0, window.innerHeight)}px`;
+        star.style.animationDuration = `${randomBetween(2, 4)}s`;
+        star.style.animationDelay = `${randomBetween(0, 4)}s`;
+        starsContainer.appendChild(star);
+        // Remove star after 10s and recreate to keep stars dynamic
+        setTimeout(() => {
+          star.remove();
+          createStar();
+        }, 10000);
+      }
+
+      // Initialize stars count
+      function initStars(count = 80) {
+        for (let i = 0; i < count; i++) {
+          createStar();
+        }
+      }
+
+      // Zoom into letter animation: screen zooms into letter, then congrats screen appears
+      function zoomIntoLetterTransition() {
+        return new Promise((resolve) => {
+          // Add zooming classes
+          welcomeScreen.classList.add('zooming');
+          sealedLetter.classList.add('zooming');
+          // After animation ends (1.6s), resolve
+          setTimeout(() => {
+            resolve();
+          }, 1600);
+        });
+      }
+
+      // Sound control helpers
+      function updateSoundButton(button, icon, muted) {
+        if (muted) {
+          button.classList.add('muted');
+          icon.innerHTML = `
+            <path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5v-9a4.5 4.5 0 0 1 4.5 4.5z" fill="none"/>
+            <path d="M19 5l-14 14" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          `;
+        } else {
+          button.classList.remove('muted');
+          icon.innerHTML = `
+            <path d="M3 9v6h4l5 5V4L7 9H3z"/>
+            <path d="M16.5 12a4.5 4.5 0 0 1-4.5 4.5v-9A4.5 4.5 0 0 1 16.5 12z"/>
+            <path d="M19.5 12a7.5 7.5 0 0 1-7.5 7.5v-3a4.5 4.5 0 0 0 4.5-4.5 4.5 4.5 0 0 0-4.5-4.5v-3a7.5 7.5 0 0 1 7.5 7.5z"/>
+          `;
+        }
+      }
+
+      // Main flow on form submit
+      nameForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const name = nameInput.value.trim().toLowerCase();
+        if (!allowedNames.includes(name)) {
+          showError();
+          nameInput.value = '';
+          nameInput.focus();
+          return;
+        }
+
+        // Disable form controls during animation
+        nameInput.disabled = true;
+        openLetterBtn.disabled = true;
+
+        // Animate unsealing letter
+        await animateUnseal();
+
+        // Zoom into letter transition (sucking in effect)
+        await zoomIntoLetterTransition();
+
+        // Set logo and texts based on name
+        const capitalized = name.charAt(0).toUpperCase() + name.slice(1);
+        document.getElementById('congrats-name').textContent = capitalized;
+
+        if (name === 'raissa') {
+          universityLogo.src = 'assets/logo2.png';
+          universityLogo.alt = "University logo, a medieval crest with a silver dragon and a scroll on a dark green shield, surrounded by ornate silver filigree";
+          document.querySelector('.welcome-text-line1').textContent = 'Welcome to the';
+          document.querySelector('.welcome-text-line2').textContent = 'Fortified Realms of Digital Defense';
+          document.querySelector('.wishes-text').textContent =
+            'May your journey weave through shadows and code,\nwhere silence guards secrets, and vigilance becomes art.';
+        }
+
+        // Stop welcome audio and hide welcome sound button
+        welcomeAudio.pause();
+        soundBtnWelcome.classList.add('hidden');
+
+        // Show congrats screen with magical appear animation
+        welcomeScreen.classList.add('hidden');
+        sealedLetter.classList.remove('zooming', 'unsealing');
+        welcomeScreen.classList.remove('zooming');
+
+        congratsScreen.classList.remove('hidden');
+        // Trigger reflow to restart animation
+        void congratsScreen.offsetWidth;
+        congratsScreen.classList.add('show');
+
+        // Start congrats audio and show congrats sound button
+        congratsAudio.muted = false;
+        congratsAudio.play().catch(() => {});
+        soundBtnCongrats.classList.remove('hidden');
+        updateSoundButton(soundBtnCongrats, soundIconCongrats, congratsAudio.muted);
+
+        // Start fireworks and sparks
+        startFireworks();
+        startSparks();
+
+        // Re-enable form controls (optional, if user can go back)
+        nameInput.disabled = false;
+        openLetterBtn.disabled = false;
+      });
+
+      // Accessibility: focus input on load
+      window.addEventListener('load', () => {
+        nameInput.focus();
+        initStars(80);
+        // Try to play welcome audio automatically
+        welcomeAudio.muted = false;
+        congratsAudio.muted = false;
+        welcomeAudio.play().catch(() => {});
+        updateSoundButton(soundBtnWelcome, soundIconWelcome, welcomeAudio.muted);
+      });
+      
+      // Pre-welcome screen reveal handler
+      revealBtn.addEventListener('click', () => {
+        preWelcomeScreen.classList.add('fade-out');
+        setTimeout(() => {
+          preWelcomeScreen.classList.add('hidden');
+          welcomeScreen.classList.remove('hidden');
+          welcomeAudio.muted = false;
+          welcomeAudio.play().catch(() => {});
+          soundBtnWelcome.classList.remove('hidden');
+          updateSoundButton(soundBtnWelcome, soundIconWelcome, welcomeAudio.muted);
+          nameInput.focus();
+        }, 1000);
+      });
+
+      // Sound button toggle handlers
+      soundBtnWelcome.addEventListener('click', () => {
+        if (welcomeAudio.muted) {
+          welcomeAudio.muted = false;
+        } else {
+          welcomeAudio.muted = true;
+        }
+        updateSoundButton(soundBtnWelcome, soundIconWelcome, welcomeAudio.muted);
+      });
+
+      soundBtnCongrats.addEventListener('click', () => {
+        if (congratsAudio.muted) {
+          congratsAudio.muted = false;
+        } else {
+          congratsAudio.muted = true;
+        }
+        updateSoundButton(soundBtnCongrats, soundIconCongrats, congratsAudio.muted);
+      });
+
+      // Pause congrats audio when user leaves page
+      window.addEventListener('beforeunload', () => {
+        congratsAudio.pause();
+        welcomeAudio.pause();
+      });
+    })();
+  </script>
+ </body>
+</html>
